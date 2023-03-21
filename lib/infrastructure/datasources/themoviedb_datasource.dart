@@ -1,3 +1,4 @@
+import 'package:cinemapedia_app/infrastructure/models/moviedb/movie_details.dart';
 import 'package:dio/dio.dart';
 import 'package:cinemapedia_app/infrastructure/mapers/movie_mapper.dart';
 import 'package:cinemapedia_app/infrastructure/models/moviedb/moviedb_response.dart';
@@ -31,7 +32,7 @@ class TheMovieDbDatasource implements MoviesDatasource {
   Future<List<Movie>> getNowPlaying({int page = 1}) async {
     final response = await dio.get(
       '/movie/now_playing',
-      queryParameters: {'page': page, 'language': 'es-MX'},
+      queryParameters: {'page': page, },
     );
 
     return _jsonToMovies(response.data);
@@ -41,7 +42,7 @@ class TheMovieDbDatasource implements MoviesDatasource {
   Future<List<Movie>> getPopular({int page = 1}) async {
     final response = await dio.get(
       '/movie/popular',
-      queryParameters: {'page': page, 'language': 'es-MX'},
+      queryParameters: {'page': page, },
     );
 
     return _jsonToMovies(response.data);
@@ -51,7 +52,7 @@ class TheMovieDbDatasource implements MoviesDatasource {
   Future<List<Movie>> getTopRated({int page = 1}) async {
     final response = await dio.get(
       '/movie/top_rated',
-      queryParameters: {'page': page, 'language': 'es-MX'},
+      queryParameters: {'page': page, },
     );
 
     return _jsonToMovies(response.data);
@@ -61,9 +62,26 @@ class TheMovieDbDatasource implements MoviesDatasource {
   Future<List<Movie>> getUpcoming({int page = 1}) async {
     final response = await dio.get(
       '/movie/upcoming',
-      queryParameters: {'page': page, 'language': 'es-MX'},
+      queryParameters: {'page': page, },
     );
 
     return _jsonToMovies(response.data);
+  }
+
+  @override
+  Future<Movie> getMovieById(String movieId) async {
+    final response = await dio.get(
+      '/movie/$movieId',
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Movie with id: $movieId not found');
+    }
+
+    final movieDetails = MovieDetails.fromJson(response.data);
+
+    final Movie movie = MovieMapper.movieDetailsToEntity(movieDetails);
+
+    return movie;
   }
 }
