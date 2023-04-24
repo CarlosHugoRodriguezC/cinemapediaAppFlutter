@@ -28,7 +28,6 @@ class MovieScreenState extends ConsumerState<MovieScreen> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
   }
 
@@ -76,11 +75,7 @@ class _MovieDetails extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _MovieDescription(movie: movie, size: size, textStyles: textStyles),
-        // TODO: Generos
         _GenresChips(movie: movie),
-
-        // TODO: Mostrar actores
-
         _ActorByMovie(
           movieId: movie.id.toString(),
         ),
@@ -92,12 +87,21 @@ class _MovieDetails extends StatelessWidget {
   }
 }
 
-class _CustomSliverAppbar extends StatelessWidget {
+final isFavoriteProvider =
+    FutureProvider.family.autoDispose((ref, int movieId) {
+  final localStorageRepository = ref.watch(localStorageRepositoryProvider);
+
+  return localStorageRepository.isMovieFavorite(movieId);
+});
+
+class _CustomSliverAppbar extends ConsumerWidget {
   final Movie movie;
+
   const _CustomSliverAppbar({required this.movie});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFavoriteFuture = ref.watch(isFavoriteProvider(movie.id));
     final size = MediaQuery.of(context).size;
     return SliverAppBar(
       backgroundColor: Colors.black,
@@ -105,15 +109,29 @@ class _CustomSliverAppbar extends StatelessWidget {
       foregroundColor: Colors.white,
       actions: [
         IconButton(
-          onPressed: () {
-            // TODO: Agregar/remover favorito
-          },
-          icon: const Icon(Icons.favorite_border),
-          // icon: const Icon(
-          //   Icons.favorite_rounded,
-          //   color: Colors.red,
-          // ),
-        ),
+            onPressed: () {
+              ref.read(localStorageRepositoryProvider).toggleFavorite(movie);
+              ref.invalidate(isFavoriteProvider(movie.id));
+            },
+            icon: isFavoriteFuture.when(
+              data: (data) => data
+                  ? const Icon(
+                      Icons.favorite_rounded,
+                      color: Colors.red,
+                    )
+                  : const Icon(Icons.favorite_border),
+              error: (_, __) => const Icon(Icons.favorite_border),
+              loading: () => const CircularProgressIndicator(
+                strokeWidth: 2,
+              ),
+            )
+
+            // icon: const Icon(Icons.favorite_border),
+            // icon: const Icon(
+            //   Icons.favorite_rounded,
+            //   color: Colors.red,
+            // ),
+            ),
       ],
       flexibleSpace: FlexibleSpaceBar(
         // title: Text(
