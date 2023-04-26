@@ -15,7 +15,7 @@ class StorageMoviesNotifier extends StateNotifier<Map<int, Movie>> {
 
   StorageMoviesNotifier({required this.localStorageRepository}) : super({});
 
-  Future<void> loadNextPage() async {
+  Future<List<Movie>> loadNextPage() async {
     final movies = await localStorageRepository.getFavoriteMovies(
       offset: page * 20,
       limit: 20,
@@ -29,5 +29,20 @@ class StorageMoviesNotifier extends StateNotifier<Map<int, Movie>> {
     }
 
     state = {...state, ...tempMovies};
+
+    return movies;
+  }
+
+  Future<void> toggleFavorite(Movie movie) async {
+    final bool isMovieInFavorites =
+        await localStorageRepository.toggleFavorite(movie);
+
+    print(isMovieInFavorites);
+    if (isMovieInFavorites) {
+      state.remove(movie.id);
+      state = {...state};
+    } else {
+      state = {...state, movie.id: movie};
+    }
   }
 }
